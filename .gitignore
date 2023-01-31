@@ -32,4 +32,5 @@ website/package-lock.json
 
 # Coverage report
 .coverage
-htmlcov
+**/htmlcov
+**/coverage

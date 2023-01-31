@@ -1,5 +1,9 @@
+from __future__ import annotations
+
 from enum import auto
-from strenum import StrEnum, LowercaseStrEnum
+
+from strenum import LowercaseStrEnum
+from strenum import StrEnum
 
 
 class Directions(StrEnum):

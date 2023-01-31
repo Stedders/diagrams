@@ -3,11 +3,15 @@ from __future__ import annotations
 import os
 import uuid
 from pathlib import Path
-from typing import Dict
-from typing import List
-from typing import Union
+from typing import Any
+from typing import Optional
 
 from graphviz import Digraph
+
+from diagrams.attributes import CurveStyles
+from diagrams.attributes import Directions
+from diagrams.attributes import OutputFormats
+
 
 # Global contexts for a diagrams and a cluster.
 #
@@ -25,7 +29,7 @@ from graphviz import Digraph
 #         return None
 #
 #
-# def setdiagram(diagram: "Diagram"):
+# def setdiagram(diagram: "Diagram"):Goo
 #     __diagram.set(diagram)
 #
 #
@@ -34,10 +38,35 @@ from graphviz import Digraph
 #         return __cluster.get()
 #     except LookupError:
 #         return None
+#
+#
+# def setcluster(cluster: Cluster):
+#     __cluster.set(cluster)
 
 
-def setcluster(cluster: Cluster):
-    __cluster.set(cluster)
+class DotGraph:
+    def __init__(self):
+        self.__diagram: Diagram | None = None
+        self.__cluster: Cluster | None = None
+
+    @property
+    def cluster(self) -> Cluster | None:
+        return self.__cluster
+
+    @cluster.setter
+    def cluster(self, cluster: Cluster):
+        self.__cluster = cluster
+
+    @property
+    def diagram(self) -> Diagram | None:
+        return self.__diagram
+
+    @diagram.setter
+    def diagram(self, diagram: Diagram):
+        self.__diagram = diagram
+
+
+dot_graph = DotGraph()
 
 
 class Diagram:
@@ -75,39 +104,22 @@ class Diagram:
         'color': '#7B8894',
     }
 
-    # fmt: on
-
-    # TODO: Label position option
-    # TODO: Save directory option (filename + directory?)
     def __init__(
-        self,
-        name: str = "",
-        filename: str = "",
-        direction: str = "LR",
-        curvestyle: str = "ortho",
-        outformat: str = "png",
-        autolabel: bool = False,
-        show: bool = True,
-        strict: bool = False,
-        graph_attr: dict = {},
-        node_attr: dict = {},
-        edge_attr: dict = {},
+            self,
+            name: str = "",
+            filename: str = "",
+            directory: os.PathLike | str | None = None,
+            direction: str = "LR",
+            curvestyle: str = "ortho",
+            outformat: str = "png",
+            autolabel: bool = False,
+            show: bool = True,
+            strict: bool = False,
+            graph_attr: dict[str, Any] = {},
+            node_attr: dict[str, Any] = {},
+            edge_attr: dict[str, Any] = {},
     ):
-        """Diagram represents a global diagrams context.
-
-        :param name: Diagram name. It will be used for output filename if the
-            filename isn't given.
-        :param filename: The output filename, without the extension (.png).
-            If not given, it will be generated from the name.
-        :param direction: Data flow direction. Default is 'left to right'.
-        :param curvestyle: Curve bending style. One of "ortho" or "curved".
-        :param outformat: Output file format. Default is 'png'.
-        :param show: Open generated image after save if true, just only save otherwise.
-        :param graph_attr: Provide graph_attr dot config attributes.
-        :param node_attr: Provide node_attr dot config attributes.
-        :param edge_attr: Provide edge_attr dot config attributes.
-        :param strict: Rendering should merge multi-edges.
-        """
+        """Diagram represents a global diagrams context."""
         self.name = name
         if not name and not filename:
             filename = "diagrams_image"
@@ -115,6 +127,8 @@ class Diagram:
             filename = "_".join(self.name.split()).lower()
         self.filename = filename
         self.dot = Digraph(self.name, filename=self.filename, strict=strict)
+        self.directory = Path(directory) if directory else Path(".")
+        self.file_path = self.directory / self.filename
 
         # Set attributes.
         for k, v in self._default_graph_attrs.items():
@@ -156,26 +170,26 @@ class Diagram:
         return str(self.dot)
 
     def __enter__(self):
-        setdiagram(self)
+        dot_graph.diagram = self
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.render()
-        # Remove the graphviz file leaving only the image.
-        os.remove(self.filename)
-        setdiagram(None)
+        self.file_path.unlink()
+        # os.remove(self.filename)
+        dot_graph.diagram = None
 
     def _repr_png_(self):
         return self.dot.pipe(format="png")
 
     def _validate_direction(self, direction: str) -> bool:
-        return direction.upper() in self.__directions
+        return direction.upper() in [v for v in Directions]
 
     def _validate_curvestyle(self, curvestyle: str) -> bool:
-        return curvestyle.lower() in self.__curvestyles
+        return curvestyle.lower() in [v for v in CurveStyles]
 
     def _validate_outformat(self, outformat: str) -> bool:
-        return outformat.lower() in self.__outformats
+        return outformat.lower() in [v for v in OutputFormats]
 
     def node(self, nodeid: str, label: str, **attrs) -> None:
         """Create a new node."""
@@ -185,16 +199,16 @@ class Diagram:
         """Connect the two Nodes."""
         self.dot.edge(node.nodeid, node2.nodeid, **edge.attrs)
 
-    def subgraph(self, dot: Digraph) -> None:
+    def subgraph(self, dot: Digraph):
         """Create a subgraph for clustering"""
         self.dot.subgraph(dot)
 
     def render(self) -> None:
         if isinstance(self.outformat, list):
             for one_format in self.outformat:
-                self.dot.render(format=one_format, view=self.show, quiet=True)
+                self.dot.render(directory=self.directory, format=one_format, view=self.show, quiet=True)
         else:
-            self.dot.render(format=self.outformat, view=self.show, quiet=True)
+            self.dot.render(directory=self.directory, format=self.outformat, view=self.show, quiet=True)
 
 
 class Cluster:
@@ -243,21 +257,21 @@ class Cluster:
         self.dot.graph_attr["rankdir"] = direction
 
         # Node must be belong to a diagrams.
-        self._diagram = getdiagram()
+        self._diagram = dot_graph.diagram
         if self._diagram is None:
             raise OSError("Global diagrams context not set up")
-        self._parent = getcluster()
+        self._parent = dot_graph.cluster
 
         # Set cluster depth for distinguishing the background color
-        self.depth = self._parent.depth + 1 if self._parent else 0
+        self.depth: int = self._parent.depth + 1 if self._parent else 0
         coloridx = self.depth % len(self.__bgcolors)
         self.dot.graph_attr["bgcolor"] = self.__bgcolors[coloridx]
 
         # Merge passed in attributes
         self.dot.graph_attr.update(graph_attr)
 
-    def __enter__(self):
-        setcluster(self)
+    def __enter__(self) -> Cluster:
+        dot_graph.cluster = self
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -265,7 +279,7 @@ class Cluster:
             self._parent.subgraph(self.dot)
         else:
             self._diagram.subgraph(self.dot)
-        setcluster(self._parent)
+        dot_graph.cluster = self._parent
 
     def _validate_direction(self, direction: str) -> bool:
         return direction.upper() in self.__directions
@@ -281,15 +295,15 @@ class Cluster:
 class Node:
     """Node represents a node for a specific backend service."""
 
-    _provider = None
-    _type = None
+    _provider: str | None = None
+    _type: str | None = None
 
-    _icon_dir = None
-    _icon = None
+    _icon_dir: str | None = None
+    _icon: str | None = None
 
     _height = 1.9
 
-    def __init__(self, label: str = "", *, nodeid: str = None, **attrs: dict):
+    def __init__(self, label: str = "", *, nodeid: str | None = None, **attrs: dict):
         """Node represents a system component.
 
         :param label: Node label.
@@ -298,8 +312,8 @@ class Node:
         self._id = nodeid or self._rand_id()
         self.label = label
 
-        # Node must be belong to a diagrams.
-        self._diagram = getdiagram()
+        # Node must belong to a diagrams.
+        self._diagram = dot_graph.diagram
         if self._diagram is None:
             raise OSError("Global diagrams context not set up")
 
@@ -324,7 +338,7 @@ class Node:
         # fmt: on
         self._attrs.update(attrs)
 
-        self._cluster = getcluster()
+        self._cluster = dot_graph.cluster
 
         # If a node is in the cluster context, add it to cluster.
         if self._cluster:
