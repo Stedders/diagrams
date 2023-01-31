@@ -1,6 +1,7 @@
 """
 Openstack provides a set of general OpenStack services.
 """
+from __future__ import annotations
 
 from diagrams import Node
 

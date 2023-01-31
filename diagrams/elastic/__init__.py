@@ -1,6 +1,7 @@
 """
 Elastic provides a set of general elastic services.
 """
+from __future__ import annotations
 
 from diagrams import Node
 

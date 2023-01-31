@@ -1,6 +1,7 @@
 """
 OnPrem provides a set of general on-premise services.
 """
+from __future__ import annotations
 
 from diagrams import Node
 

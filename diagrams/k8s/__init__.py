@@ -1,6 +1,7 @@
 """
 K8S provides a set of services for Kubernetes.
 """
+from __future__ import annotations
 
 from diagrams import Node
 

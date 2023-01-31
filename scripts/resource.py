@@ -5,6 +5,7 @@ There are 2 commands available.
 - clean: clean and unify the resources file names with some rules.
 - round: generate the rounded images from the original squared images.
 """
+from __future__ import annotations
 
 import os
 import subprocess
@@ -83,6 +84,7 @@ def cleaner_k8s(f):
             f = f[len(p) :]
             break
     return f.lower()
+
 
 def cleaner_digitalocean(f):
     f = f.replace("-32", "")
@@ -201,7 +203,9 @@ def svg2png2(pvd: str) -> None:
     def _convert(base: str, path: str):
         path_src = os.path.join(base, path)
         path_dest = path_src.replace(".svg", ".png")
-        subprocess.run([cfg.CMD_SVG2PNG_IM, *cfg.CMD_SVG2PNG_IM_OPTS, path_src, path_dest])
+        subprocess.run(
+            [cfg.CMD_SVG2PNG_IM, *cfg.CMD_SVG2PNG_IM_OPTS, path_src, path_dest],
+        )
         subprocess.run(["rm", path_src])
 
     for root, _, files in os.walk(resource_dir(pvd)):
@@ -211,10 +215,10 @@ def svg2png2(pvd: str) -> None:
 
 # fmt: off
 commands = {
-    "clean": clean_png,
-    "round": round_png,
-    "svg2png": svg2png,
-    "svg2png2": svg2png2,
+    'clean': clean_png,
+    'round': round_png,
+    'svg2png': svg2png,
+    'svg2png2': svg2png2,
 }
 # fmt: on
 

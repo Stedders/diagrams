@@ -1,6 +1,7 @@
 """
 Custom provides the possibility of load an image to be presented as a node.
 """
+from __future__ import annotations
 
 from diagrams import Node
 

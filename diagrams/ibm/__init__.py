@@ -1,6 +1,7 @@
 """
 IBM provides a set of services for IBM Cloud provider.
 """
+from __future__ import annotations
 
 from diagrams import Node
 

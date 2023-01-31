@@ -1,6 +1,7 @@
 """
 AWS provides a set of services for Amazon Web Service provider.
 """
+from __future__ import annotations
 
 from diagrams import Node
 

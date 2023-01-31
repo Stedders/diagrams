@@ -1,6 +1,7 @@
 """
 Firebase provides a set of services for Firebase provider.
 """
+from __future__ import annotations
 
 from diagrams import Node
 

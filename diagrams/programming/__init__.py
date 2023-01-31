@@ -1,6 +1,7 @@
 """
 Programming provides a set of programming languages and frameworks.
 """
+from __future__ import annotations
 
 from diagrams import Node
 

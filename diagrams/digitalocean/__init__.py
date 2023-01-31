@@ -1,6 +1,7 @@
 """
 DigitalOcean provides a set of services for DigitalOcean provider.
 """
+from __future__ import annotations
 
 from diagrams import Node
 

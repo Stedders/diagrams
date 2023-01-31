@@ -1,8 +1,11 @@
-import contextvars
+from __future__ import annotations
+
 import os
 import uuid
 from pathlib import Path
-from typing import List, Union, Dict
+from typing import Dict
+from typing import List
+from typing import Union
 
 from graphviz import Digraph
 
@@ -11,65 +14,65 @@ from graphviz import Digraph
 # These global contexts are for letting the clusters and nodes know
 # where context they are belong to. So the all clusters and nodes does
 # not need to specify the current diagrams or cluster via parameters.
-__diagram = contextvars.ContextVar("diagrams")
-__cluster = contextvars.ContextVar("cluster")
+# __diagram = contextvars.ContextVar("diagrams")
+# __cluster = contextvars.ContextVar("cluster")
+#
+#
+# def getdiagram() -> "Diagram":
+#     try:
+#         return __diagram.get()
+#     except LookupError:
+#         return None
+#
+#
+# def setdiagram(diagram: "Diagram"):
+#     __diagram.set(diagram)
+#
+#
+# def getcluster() -> "Cluster":
+#     try:
+#         return __cluster.get()
+#     except LookupError:
+#         return None
 
 
-def getdiagram() -> "Diagram":
-    try:
-        return __diagram.get()
-    except LookupError:
-        return None
-
-
-def setdiagram(diagram: "Diagram"):
-    __diagram.set(diagram)
-
-
-def getcluster() -> "Cluster":
-    try:
-        return __cluster.get()
-    except LookupError:
-        return None
-
-
-def setcluster(cluster: "Cluster"):
+def setcluster(cluster: Cluster):
     __cluster.set(cluster)
 
 
 class Diagram:
-    __directions = ("TB", "BT", "LR", "RL")
-    __curvestyles = ("ortho", "curved")
-    __outformats = ("png", "jpg", "svg", "pdf", "dot")
+    # __directions = ("TB", "BT", "LR", "RL")
+    # __curvestyles = ("ortho", "curved")
+    # __outformats = ("png", "jpg", "svg", "pdf", "dot")
 
     # fmt: off
     _default_graph_attrs = {
-        "pad": "2.0",
-        "splines": "ortho",
-        "nodesep": "0.60",
-        "ranksep": "0.75",
-        "fontname": "Sans-Serif",
-        "fontsize": "15",
-        "fontcolor": "#2D3436",
+        'pad': '2.0',
+        'splines': 'ortho',
+        'nodesep': '0.60',
+        'ranksep': '0.75',
+        'fontname': 'Sans-Serif',
+        'fontsize': '15',
+        'fontcolor': '#2D3436',
     }
     _default_node_attrs = {
-        "shape": "box",
-        "style": "rounded",
-        "fixedsize": "true",
-        "width": "1.4",
-        "height": "1.4",
-        "labelloc": "b",
+        'shape': 'box',
+        'style': 'rounded',
+        'fixedsize': 'true',
+        'width': '1.4',
+        'height': '1.4',
+        'labelloc': 'b',
         # imagepos attribute is not backward compatible
         # TODO: check graphviz version to see if "imagepos" is available >= 2.40
         # https://github.com/xflr6/graphviz/blob/master/graphviz/backend.py#L248
         # "imagepos": "tc",
-        "imagescale": "true",
-        "fontname": "Sans-Serif",
-        "fontsize": "13",
-        "fontcolor": "#2D3436",
+        'imagescale': 'true',
+        'fontname': 'Sans-Serif',
+        'fontsize': '13',
+        'fontcolor': '#2D3436',
     }
     _default_edge_attrs = {
-        "color": "#7B8894",
+        'color': '#7B8894',
     }
 
     # fmt: on
@@ -133,7 +136,9 @@ class Diagram:
         if isinstance(outformat, list):
             for one_format in outformat:
                 if not self._validate_outformat(one_format):
-                    raise ValueError(f'"{one_format}" is not a valid output format')
+                    raise ValueError(
+                        f'"{one_format}" is not a valid output format',
+                    )
         else:
             if not self._validate_outformat(outformat):
                 raise ValueError(f'"{outformat}" is not a valid output format')
@@ -176,7 +181,7 @@ class Diagram:
         """Create a new node."""
         self.dot.node(nodeid, label=label, **attrs)
 
-    def connect(self, node: "Node", node2: "Node", edge: "Edge") -> None:
+    def connect(self, node: Node, node2: Node, edge: Edge) -> None:
         """Connect the two Nodes."""
         self.dot.edge(node.nodeid, node2.nodeid, **edge.attrs)
 
@@ -198,12 +203,12 @@ class Cluster:
 
     # fmt: off
     _default_graph_attrs = {
-        "shape": "box",
-        "style": "rounded",
-        "labeljust": "l",
-        "pencolor": "#AEB6BE",
-        "fontname": "Sans-Serif",
-        "fontsize": "12",
+        'shape': 'box',
+        'style': 'rounded',
+        'labeljust': 'l',
+        'pencolor': '#AEB6BE',
+        'fontname': 'Sans-Serif',
+        'fontsize': '12',
     }
 
     # fmt: on
@@ -240,7 +245,7 @@ class Cluster:
         # Node must be belong to a diagrams.
         self._diagram = getdiagram()
         if self._diagram is None:
-            raise EnvironmentError("Global diagrams context not set up")
+            raise OSError("Global diagrams context not set up")
         self._parent = getcluster()
 
         # Set cluster depth for distinguishing the background color
@@ -284,7 +289,7 @@ class Node:
 
     _height = 1.9
 
-    def __init__(self, label: str = "", *, nodeid: str = None, **attrs: Dict):
+    def __init__(self, label: str = "", *, nodeid: str = None, **attrs: dict):
         """Node represents a system component.
 
         :param label: Node label.
@@ -296,7 +301,7 @@ class Node:
         # Node must be belong to a diagrams.
         self._diagram = getdiagram()
         if self._diagram is None:
-            raise EnvironmentError("Global diagrams context not set up")
+            raise OSError("Global diagrams context not set up")
 
         if self._diagram.autolabel:
             prefix = self.__class__.__name__
@@ -311,9 +316,9 @@ class Node:
         # Increase the height by the number of new lines included in the label.
         padding = 0.4 * (self.label.count('\n'))
         self._attrs = {
-            "shape": "none",
-            "height": str(self._height + padding),
-            "image": self._load_icon(),
+            'shape': 'none',
+            'height': str(self._height + padding),
+            'image': self._load_icon(),
         } if self._icon else {}
 
         # fmt: on
@@ -331,7 +336,7 @@ class Node:
         _name = self.__class__.__name__
         return f"<{self._provider}.{self._type}.{_name}>"
 
-    def __sub__(self, other: Union["Node", List["Node"], "Edge"]):
+    def __sub__(self, other: Node | list[Node] | Edge):
         """Implement Self - Node, Self - [Nodes] and Self - Edge."""
         if isinstance(other, list):
             for node in other:
@@ -343,7 +348,7 @@ class Node:
             other.node = self
             return other
 
-    def __rsub__(self, other: Union[List["Node"], List["Edge"]]):
+    def __rsub__(self, other: list[Node] | list[Edge]):
         """Called for [Nodes] and [Edges] - Self because list don't have __sub__ operators."""
         for o in other:
             if isinstance(o, Edge):
@@ -352,7 +357,7 @@ class Node:
                 o.connect(self, Edge(self))
         return self
 
-    def __rshift__(self, other: Union["Node", List["Node"], "Edge"]):
+    def __rshift__(self, other: Node | list[Node] | Edge):
         """Implements Self >> Node, Self >> [Nodes] and Self Edge."""
         if isinstance(other, list):
             for node in other:
@@ -365,7 +370,7 @@ class Node:
             other.node = self
             return other
 
-    def __lshift__(self, other: Union["Node", List["Node"], "Edge"]):
+    def __lshift__(self, other: Node | list[Node] | Edge):
         """Implements Self << Node, Self << [Nodes] and Self << Edge."""
         if isinstance(other, list):
             for node in other:
@@ -377,7 +382,7 @@ class Node:
             other.reverse = True
             return other.connect(self)
 
-    def __rrshift__(self, other: Union[List["Node"], List["Edge"]]):
+    def __rrshift__(self, other: list[Node] | list[Edge]):
         """Called for [Nodes] and [Edges] >> Self because list don't have __rshift__ operators."""
         for o in other:
             if isinstance(o, Edge):
@@ -387,7 +392,7 @@ class Node:
                 o.connect(self, Edge(self, forward=True))
         return self
 
-    def __rlshift__(self, other: Union[List["Node"], List["Edge"]]):
+    def __rlshift__(self, other: list[Node] | list[Edge]):
         """Called for [Nodes] << Self because list of Nodes don't have __lshift__ operators."""
         for o in other:
             if isinstance(o, Edge):
@@ -402,7 +407,7 @@ class Node:
         return self._id
 
     # TODO: option for adding flow description to the connection edge
-    def connect(self, node: "Node", edge: "Edge"):
+    def connect(self, node: Node, edge: Edge):
         """Connect to other node.
 
         :param node: Other node instance.
@@ -437,13 +442,13 @@ class Edge:
 
     def __init__(
         self,
-        node: "Node" = None,
+        node: Node = None,
         forward: bool = False,
         reverse: bool = False,
         label: str = "",
         color: str = "",
         style: str = "",
-        **attrs: Dict,
+        **attrs: dict,
     ):
         """Edge represents an edge between two nodes.
 
@@ -478,33 +483,33 @@ class Edge:
             self._attrs["style"] = style
         self._attrs.update(attrs)
 
-    def __sub__(self, other: Union["Node", "Edge", List["Node"]]):
+    def __sub__(self, other: Node | Edge | list[Node]):
         """Implement Self - Node or Edge and Self - [Nodes]"""
         return self.connect(other)
 
-    def __rsub__(self, other: Union[List["Node"], List["Edge"]]) -> List["Edge"]:
+    def __rsub__(self, other: list[Node] | list[Edge]) -> list[Edge]:
         """Called for [Nodes] or [Edges] - Self because list don't have __sub__ operators."""
         return self.append(other)
 
-    def __rshift__(self, other: Union["Node", "Edge", List["Node"]]):
+    def __rshift__(self, other: Node | Edge | list[Node]):
         """Implements Self >> Node or Edge and Self >> [Nodes]."""
         self.forward = True
         return self.connect(other)
 
-    def __lshift__(self, other: Union["Node", "Edge", List["Node"]]):
+    def __lshift__(self, other: Node | Edge | list[Node]):
         """Implements Self << Node or Edge and Self << [Nodes]."""
         self.reverse = True
         return self.connect(other)
 
-    def __rrshift__(self, other: Union[List["Node"], List["Edge"]]) -> List["Edge"]:
+    def __rrshift__(self, other: list[Node] | list[Edge]) -> list[Edge]:
         """Called for [Nodes] or [Edges] >> Self because list of Edges don't have __rshift__ operators."""
         return self.append(other, forward=True)
 
-    def __rlshift__(self, other: Union[List["Node"], List["Edge"]]) -> List["Edge"]:
+    def __rlshift__(self, other: list[Node] | list[Edge]) -> list[Edge]:
         """Called for [Nodes] or [Edges] << Self because list of Edges don't have __lshift__ operators."""
         return self.append(other, reverse=True)
 
-    def append(self, other: Union[List["Node"], List["Edge"]], forward=None, reverse=None) -> List["Edge"]:
+    def append(self, other: list[Node] | list[Edge], forward=None, reverse=None) -> list[Edge]:
         result = []
         for o in other:
             if isinstance(o, Edge):
@@ -513,10 +518,12 @@ class Edge:
                 self._attrs = o.attrs.copy()
                 result.append(o)
             else:
-                result.append(Edge(o, forward=forward, reverse=reverse, **self._attrs))
+                result.append(
+                    Edge(o, forward=forward, reverse=reverse, **self._attrs),
+                )
         return result
 
-    def connect(self, other: Union["Node", "Edge", List["Node"]]):
+    def connect(self, other: Node | Edge | list[Node]):
         if isinstance(other, list):
             for node in other:
                 self.node.connect(node, self)
@@ -532,7 +539,7 @@ class Edge:
                 return self
 
     @property
-    def attrs(self) -> Dict:
+    def attrs(self) -> dict:
         if self.forward and self.reverse:
             direction = "both"
         elif self.forward:

@@ -1,6 +1,7 @@
 """
 Saas provides a set of general saas services.
 """
+from __future__ import annotations
 
 from diagrams import Node
 

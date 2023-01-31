@@ -29,3 +29,7 @@ website/package-lock.json
 
 # Ignore .swp files
 .swp
+
+# Coverage report
+.coverage
+htmlcov

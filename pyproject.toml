@@ -11,17 +11,15 @@ include = ["resources/**/*"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
-graphviz = ">=0.13.2,<0.21.0"
-jinja2 = ">=2.10,<4.0"
-contextvars = { version = "^2.4", python = "~3.6" }
-typed-ast = "^1.5.4"
+strenum = "^0.4.9"
+graphviz = "^0.20.1"
 
-[tool.poetry.dev-dependencies]
-pytest = "^7.2"
-pylint = "^2.7"
-rope = "^0.14.0"
-isort = "^4.3"
-black = "^22.12.0"
+[tool.poetry.group.dev.dependencies]
+pre-commit = "<3.0.0"
 
 [tool.black]
 line-length = 120
+
+[build-system]
+requires = ["poetry_core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
