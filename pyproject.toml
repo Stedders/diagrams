@@ -29,7 +29,7 @@ requires = ["poetry_core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.coverage.report]
-fail_under = 5
+fail_under = 25
 
 [tool.pytest.ini_options]
 addopts = """
